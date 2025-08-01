@@ -61,9 +61,7 @@ const EMOJIS_MORE = [
   { emoji: '😜', mood: 'Playful' },
   { emoji: '🥰', mood: 'Affectionate' },
   { emoji: '😔', mood: 'Disappointed' },
-  { emoji: '🤩', mood: 'Excited' },
-  { emoji: '😇', mood: 'Blessed' },
-  { emoji: '😤', mood: 'Determined' },
+  { emoji: '🤩', mood: 'Excited' }
 ];
 
 // Add funny messages for moods
@@ -334,7 +332,16 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
         }}
       >
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 16, justifyContent: 'center', marginBottom: 8 }}>
-          {(showMoreMoods ? [...EMOJIS_MAIN, ...EMOJIS_MORE] : EMOJIS_MAIN).map(({ emoji }, idx) => (
+          {(() => {
+            // If expanded, show all emojis as before
+            if (showMoreMoods) return [...EMOJIS_MAIN, ...EMOJIS_MORE];
+            // If not expanded, but selectedMood is in EMOJIS_MORE, swap it into the last slot
+            const main = [...EMOJIS_MAIN];
+            if (selectedMood && EMOJIS_MORE.some(e => e.emoji === selectedMood) && !main.some(e => e.emoji === selectedMood)) {
+              main[main.length - 1] = EMOJIS_MORE.find(e => e.emoji === selectedMood)!;
+            }
+            return main;
+          })().map(({ emoji }, idx) => (
             <button
               key={emoji + idx}
               type="button"
