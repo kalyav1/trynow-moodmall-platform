@@ -107,6 +107,55 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
   const [productError, setProductError] = useState<string | null>(null);
   const [pendingPhotoMood, setPendingPhotoMood] = useState<string | null>(null); // for controlling product fetch
   const [usedFallback, setUsedFallback] = useState(false); // track if fallback is used
+  const [selectedProduct, setSelectedProduct] = useState<any | null>(null);
+  const [overlayPos, setOverlayPos] = useState({ x: 50, y: 50 }); // percent
+  const [overlayScale, setOverlayScale] = useState(1);
+  const overlayRef = useRef<HTMLImageElement>(null);
+  const roomRef = useRef<HTMLDivElement>(null);
+
+  // Drag logic for overlay
+  const [dragging, setDragging] = useState(false);
+  const [dragStart, setDragStart] = useState<{ x: number; y: number } | null>(null);
+  const [overlayStart, setOverlayStart] = useState<{ x: number; y: number } | null>(null);
+
+  function handleOverlayMouseDown(e: React.MouseEvent) {
+    e.preventDefault();
+    setDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setOverlayStart({ ...overlayPos });
+  }
+  function handleOverlayMouseMove(e: MouseEvent) {
+    if (!dragging || !dragStart || !overlayStart || !roomRef.current) return;
+    const rect = roomRef.current.getBoundingClientRect();
+    const dx = ((e.clientX - dragStart.x) / rect.width) * 100;
+    const dy = ((e.clientY - dragStart.y) / rect.height) * 100;
+    let newX = overlayStart.x + dx;
+    let newY = overlayStart.y + dy;
+    newX = Math.max(0, Math.min(100, newX));
+    newY = Math.max(0, Math.min(100, newY));
+    setOverlayPos({ x: newX, y: newY });
+  }
+  function handleOverlayMouseUp() {
+    setDragging(false);
+    setDragStart(null);
+    setOverlayStart(null);
+  }
+  useEffect(() => {
+    if (dragging) {
+      window.addEventListener('mousemove', handleOverlayMouseMove);
+      window.addEventListener('mouseup', handleOverlayMouseUp);
+      return () => {
+        window.removeEventListener('mousemove', handleOverlayMouseMove);
+        window.removeEventListener('mouseup', handleOverlayMouseUp);
+      };
+    }
+  }, [dragging, dragStart, overlayStart]);
+
+  // Reset overlay when new image or product selected
+  useEffect(() => {
+    setOverlayPos({ x: 50, y: 50 });
+    setOverlayScale(1);
+  }, [imagePreview, selectedProduct]);
 
   // Load face-api.js models on mount
   useEffect(() => {
@@ -672,6 +721,130 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
           <span style={{ color: '#6B7280', fontWeight: 400 }}>{funnyMessage}</span>
         </div>
       )}
+      {/* Virtual Room Experience */}
+      {imagePreview && (
+        <div style={{ marginBottom: 18 }}>
+          <h3 style={{ fontSize: 17, fontWeight: 600, color: COLORS.textPrimary, marginBottom: 6, textAlign: 'center' }}>
+            Virtual Room Preview
+          </h3>
+          <div
+            ref={roomRef}
+            style={{
+              width: '100%',
+              height: 220,
+              background: '#f3f7fa',
+              borderRadius: 14,
+              boxShadow: '0 1px 6px #4F8CFF11',
+              position: 'relative',
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <img
+              src={imagePreview}
+              alt="User"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: 14,
+                filter: selectedProduct ? 'brightness(0.98)' : 'none',
+                transition: 'filter 0.2s',
+              }}
+            />
+            {selectedProduct && (
+              <img
+                ref={overlayRef}
+                src={selectedProduct.thumbnail || selectedProduct.image}
+                alt={selectedProduct.title}
+                style={{
+                  position: 'absolute',
+                  left: `${overlayPos.x}%`,
+                  top: `${overlayPos.y}%`,
+                  transform: `translate(-50%, -50%) scale(${overlayScale})`,
+                  width: 80,
+                  height: 80,
+                  objectFit: 'contain',
+                  cursor: 'grab',
+                  zIndex: 2,
+                  boxShadow: '0 2px 8px #4F8CFF22',
+                  borderRadius: 10,
+                  border: '2px solid #4F8CFF',
+                  background: '#fff',
+                  transition: dragging ? 'none' : 'box-shadow 0.15s',
+                }}
+                onMouseDown={handleOverlayMouseDown}
+                draggable={false}
+              />
+            )}
+            {!selectedProduct && (
+              <div style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: 'translate(-50%, -50%)',
+                color: COLORS.textSecondary,
+                fontWeight: 500,
+                fontSize: 15,
+                background: 'rgba(255,255,255,0.85)',
+                padding: '8px 18px',
+                borderRadius: 10,
+                boxShadow: '0 1px 4px #4F8CFF11',
+              }}>
+                Select a product to try it in your virtual room!
+              </div>
+            )}
+            {/* Zoom controls */}
+            {selectedProduct && (
+              <div style={{
+                position: 'absolute',
+                right: 10,
+                bottom: 10,
+                zIndex: 10,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 6,
+              }}>
+                <button
+                  style={{
+                    background: COLORS.accent,
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    width: 32,
+                    height: 32,
+                    fontSize: 20,
+                    cursor: 'pointer',
+                    marginBottom: 2,
+                  }}
+                  onClick={() => setOverlayScale(s => Math.min(2, s + 0.1))}
+                  aria-label="Zoom in"
+                >
+                  +
+                </button>
+                <button
+                  style={{
+                    background: COLORS.accent,
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 8,
+                    width: 32,
+                    height: 32,
+                    fontSize: 20,
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setOverlayScale(s => Math.max(0.3, s - 0.1))}
+                  aria-label="Zoom out"
+                >
+                  -
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* Product Recommendations */}
       <div style={{ marginTop: 18 }}>
         <h3 style={{ fontSize: 18, fontWeight: 600, color: COLORS.textPrimary, marginBottom: 8, textAlign: 'center' }}>
@@ -700,20 +873,25 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
           marginTop: 8,
         }}>
           {products.map(product => (
-            <div key={product.id} style={{
-              background: '#fff',
-              borderRadius: 12,
-              boxShadow: '0 2px 8px 0 #4F8CFF11',
-              padding: 10,
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              minHeight: 180,
-              position: 'relative',
-              border: '1px solid #e0e7ef',
-              transition: 'box-shadow 0.15s',
-            }}>
-              <img src={product.thumbnail} alt={product.title} style={{ width: 70, height: 70, objectFit: 'cover', borderRadius: 8, marginBottom: 8, boxShadow: '0 1px 4px #4F8CFF22' }} />
+            <div
+              key={product.id}
+              style={{
+                background: selectedProduct && selectedProduct.id === product.id ? '#e6f0ff' : '#fff',
+                borderRadius: 12,
+                boxShadow: '0 2px 8px 0 #4F8CFF11',
+                padding: 10,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                minHeight: 180,
+                position: 'relative',
+                border: selectedProduct && selectedProduct.id === product.id ? '2px solid #4F8CFF' : '1px solid #e0e7ef',
+                transition: 'box-shadow 0.15s, border 0.15s, background 0.15s',
+                cursor: 'pointer',
+              }}
+              onClick={() => setSelectedProduct(product)}
+            >
+              <img src={product.thumbnail || product.image} alt={product.title} style={{ width: 70, height: 70, objectFit: 'cover', borderRadius: 8, marginBottom: 8, boxShadow: '0 1px 4px #4F8CFF22' }} />
               <div style={{ fontWeight: 600, fontSize: 14, color: COLORS.textPrimary, textAlign: 'center', marginBottom: 4, minHeight: 36 }}>{product.title}</div>
               <div style={{ fontWeight: 500, fontSize: 15, color: COLORS.accent, marginBottom: 2 }}>${product.price}</div>
               <div style={{ fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' }}>{product.brand}</div>
