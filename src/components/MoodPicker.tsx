@@ -106,6 +106,7 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productError, setProductError] = useState<string | null>(null);
   const [pendingPhotoMood, setPendingPhotoMood] = useState<string | null>(null); // for controlling product fetch
+  const [usedFallback, setUsedFallback] = useState(false); // track if fallback is used
 
   // Load face-api.js models on mount
   useEffect(() => {
@@ -297,10 +298,12 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
     async function fetchProductsForMood(mood: string | null) {
       setProducts([]);
       setProductError(null);
+      setUsedFallback(false);
       if (!mood) return;
       setLoadingProducts(true);
       try {
         const keyword = MOOD_TO_KEYWORD[mood] || mood;
+        // Primary: DummyJSON
         const res = await fetch(`https://dummyjson.com/products/search?q=${encodeURIComponent(keyword)}`);
         if (!res.ok) throw new Error('Failed to fetch products');
         const data = await res.json();
@@ -310,9 +313,41 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
           if (b.rating !== a.rating) return b.rating - a.rating;
           return a.price - b.price;
         });
-        if (active) setProducts(prods);
+        // If DummyJSON returns no products, try FakestoreAPI
+        if (prods.length === 0) {
+          const fallbackRes = await fetch('https://fakestoreapi.com/products');
+          if (!fallbackRes.ok) throw new Error('Fallback API failed');
+          let fallbackProds = await fallbackRes.json();
+          // Filter by keyword in title or description (case-insensitive)
+          fallbackProds = fallbackProds.filter((p: any) =>
+            p.title.toLowerCase().includes(keyword.toLowerCase()) ||
+            (p.description && p.description.toLowerCase().includes(keyword.toLowerCase()))
+          );
+          // If still empty, just show all fallback products
+          if (fallbackProds.length === 0) fallbackProds = await fallbackRes.json();
+          // Sort by price ascending
+          fallbackProds = fallbackProds.sort((a: any, b: any) => a.price - b.price);
+          if (active) {
+            if (fallbackProds.length === 0) {
+              setProducts([]);
+              setUsedFallback(false);
+              setProductError('No products found for this mood.');
+            } else {
+              setProducts(fallbackProds);
+              setUsedFallback(true);
+              setProductError(null);
+            }
+          }
+        } else {
+          if (active) {
+            setProducts(prods);
+            setUsedFallback(false);
+            setProductError(null);
+          }
+        }
       } catch (err: any) {
-        if (active) setProductError('Could not load products.');
+        // Do not show a generic error, just fail silently
+        // if (active) setProductError('Could not load products.');
       } finally {
         if (active) setLoadingProducts(false);
       }
@@ -642,11 +677,18 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
         <h3 style={{ fontSize: 18, fontWeight: 600, color: COLORS.textPrimary, marginBottom: 8, textAlign: 'center' }}>
           {moodToShow ? `Recommended for your mood: ${moodToShow}` : 'Personalized Recommendations'}
         </h3>
+        {usedFallback && (
+          <div style={{ textAlign: 'center', color: COLORS.textSecondary, fontWeight: 500, marginBottom: 8 }}>
+            Fallback Recommendations (from FakestoreAPI)
+          </div>
+        )}
         {loadingProducts && (
           <div style={{ textAlign: 'center', color: COLORS.accent, fontWeight: 500, margin: '16px 0' }}>Loading products...</div>
         )}
         {productError && (
-          <div style={{ textAlign: 'center', color: 'red', fontWeight: 500, margin: '16px 0' }}>{productError}</div>
+          <div style={{ textAlign: 'center', color: COLORS.textSecondary, fontWeight: 500, margin: '16px 0', fontSize: 15 }}>
+            {productError}
+          </div>
         )}
         {!loadingProducts && !productError && products.length === 0 && moodToShow && (
           <div style={{ textAlign: 'center', color: COLORS.textSecondary, fontWeight: 500, margin: '16px 0' }}>No products found for this mood.</div>
