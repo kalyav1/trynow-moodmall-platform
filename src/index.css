@@ -1,134 +1,210 @@
+/* --- MoodPicker Modern Redesign --- */
+
 body {
+  background: #F7FAFC;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
+  color: #23272F;
+}
+
+.modern-mood-card {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 4px 24px 0 #B6C6E633;
+  padding: 32px;
+  max-width: 420px;
+  margin: 40px auto;
+  position: relative;
+}
+
+.emoji-section,
+.image-section {
+  transition: opacity 0.2s, filter 0.2s;
+}
+
+.modern-emoji-btn {
+  font-size: 28px;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid #E0E7EF;
+  background: #fff;
+  box-shadow: 0 2px 8px 0 #232f3e11;
+  outline: none;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(.4,0,.2,1);
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   margin: 0;
   padding: 0;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #e0ecff 0%, #b6e0fe 100%); /* Light sky blue gradient */
-  color: #222;
-  font-family: 'Segoe UI', 'Roboto', 'Arial', sans-serif;
 }
 
-.header-bar {
-  background: #b6e0fe;
-  color: #2563eb;
-  font-size: 2rem;
-  font-weight: bold;
-  padding: 1.5rem 0;
-  text-align: center;
-  letter-spacing: 0.05em;
-  box-shadow: 0 2px 8px 0 #0001;
-  /* border-bottom: 2px solid #e0ecff; */
-}
-
-.app-card {
-  background: rgba(255,255,255,0.85); /* Soft overlay effect */
-  border-radius: 16px;
-  box-shadow: 0 8px 32px 0 #b6e0fe55, 0 2px 8px 0 #0001;
-  max-width: 420px;
-  margin: 2.5rem auto;
-  padding: 2.5rem 2rem 2rem 2rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.emoji-btn {
-  background: #e0ecff;
-  border: 2px solid #b6e0fe;
-  border-radius: 8px;
-  font-size: 1.3rem;
-  padding: 0.3rem 0.7rem;
-  margin: 0.2rem;
-  color: #2563eb;
-  cursor: pointer;
-  transition: border 0.2s, background 0.2s, box-shadow 0.2s, transform 0.2s, filter 0.2s;
-  box-shadow: none;
-  filter: brightness(0.95) grayscale(0.2);
-  position: relative;
+.modern-emoji-btn.selected {
+  border: 3px solid #4F8CFF;
+  background: #F7FAFC;
+  box-shadow: 0 0 0 4px #4F8CFF33;
+  transform: scale(1.15);
   z-index: 1;
 }
-.emoji-btn.selected {
-  border: 2px solid #2563eb;
-  background: #dbeafe;
-  font-size: 1.7rem;
-  box-shadow: 0 4px 16px 0 #2563eb33, 0 1px 4px 0 #2563eb22;
-  transform: translateY(-6px) scale(1.18);
-  filter: none;
-  z-index: 2;
-}
-.emoji-btn:not(.selected) {
-  opacity: 0.7;
-  filter: brightness(0.92) grayscale(0.4) blur(0.2px);
-  box-shadow: none;
-  transform: translateY(2px) scale(0.95);
+
+.modern-emoji-btn:not(.selected):hover {
+  transform: scale(1.1);
+  box-shadow: 0 0 0 6px #4F8CFF22;
 }
 
-input[type="file"] {
-  display: none;
-}
-
-.custom-file-label {
-  display: inline-block;
-  background: linear-gradient(90deg, #6dd5ed 0%, #2193b0 100%);
-  color: #fff;
+.more-moods-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 auto 8px auto;
+  background: #F7FAFC;
+  color: #4F8CFF;
   border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1.2rem;
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: 16px;
+  padding: 6px 16px;
+  font-size: 16px;
+  font-weight: 600;
   cursor: pointer;
-  margin-top: 0.5rem;
-  transition: background 0.2s, box-shadow 0.2s;
-  box-shadow: 0 2px 8px 0 #2193b033;
+  box-shadow: 0 1px 4px 0 #4F8CFF11;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+.more-moods-btn:hover {
+  background: #E5E7EB;
+  box-shadow: 0 2px 8px 0 #4F8CFF22;
+}
+
+.modern-file-label {
+  background: #4F8CFF;
+  color: #fff;
+  border-radius: 16px;
+  padding: 10px 22px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 8px 0 #4F8CFF22;
+  border: none;
+  outline: none;
   position: relative;
+  transition: background 0.12s, box-shadow 0.12s;
+  display: inline-block;
 }
-.custom-file-label:hover {
-  background: linear-gradient(90deg, #2193b0 0%, #6dd5ed 100%);
-  box-shadow: 0 4px 16px 0 #2193b055;
+.modern-file-label:hover {
+  background: #6eaaff;
+  box-shadow: 0 4px 16px 0 #4F8CFF33;
 }
-.custom-file-label .file-icon {
-  margin-right: 0.5rem;
-  font-size: 1.1em;
-  vertical-align: middle;
+.modern-file-label:active {
+  background: #2563eb;
+}
+.modern-file-label[disabled],
+.image-section[style*='pointer-events: none'] .modern-file-label {
+  background: #E5E7EB !important;
+  color: #6B7280 !important;
+  cursor: not-allowed !important;
+  opacity: 0.7;
 }
 
-.btn-primary {
-  background: #2563eb;
+.image-section img {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 2px solid #4F8CFF;
+  box-shadow: 0 2px 8px 0 #4F8CFF22;
+}
+
+.image-section button[aria-label='Remove image'] {
+  background: #4F8CFF;
   color: #fff;
   border: none;
-  border-radius: 6px;
-  padding: 0.5rem 1.2rem;
-  font-size: 1rem;
-  font-weight: 500;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  margin-top: 0.5rem;
-  transition: background 0.2s;
+  box-shadow: 0 1px 4px 0 #4F8CFF22;
+  margin-left: 2px;
+  transition: background 0.12s;
 }
-.btn-primary:hover {
-  background: #1d4ed8;
-}
-
-::-webkit-scrollbar {
-  width: 8px;
-  background: #e0ecff;
-}
-::-webkit-scrollbar-thumb {
-  background: #b6e0fe;
-  border-radius: 4px;
+.image-section button[aria-label='Remove image']:hover {
+  background: #2563eb;
 }
 
-.sunk-section {
-  opacity: 0.5;
-  filter: blur(0.5px) grayscale(0.2);
+.modern-cta-btn {
+  width: 100%;
+  margin-top: 24px;
+  background: #4F8CFF;
+  color: #fff;
+  border: none;
+  border-radius: 16px;
+  font-size: 18px;
+  font-weight: 600;
+  padding: 14px 0;
+  box-shadow: 0 2px 8px 0 #4F8CFF22;
+  cursor: pointer;
+  opacity: 1;
+  transition: background 0.12s, box-shadow 0.12s;
+}
+.modern-cta-btn:disabled {
+  background: #E5E7EB;
+  color: #6B7280;
+  cursor: not-allowed;
+  opacity: 0.7;
+  box-shadow: none;
+}
+.modern-cta-btn:hover:not(:disabled) {
+  background: #6eaaff;
+  box-shadow: 0 4px 16px 0 #4F8CFF33;
+}
+.modern-cta-btn:active:not(:disabled) {
+  background: #2563eb;
+}
+
+/* Skip for now link */
+.modern-mood-card button[style*='text-decoration: underline'] {
+  background: none;
+  border: none;
+  color: #6B7280;
+  text-decoration: underline;
+  font-size: 15px;
+  cursor: pointer;
+  opacity: 0.8;
+  margin-top: 4px;
+  transition: color 0.12s;
+}
+.modern-mood-card button[style*='text-decoration: underline']:hover {
+  color: #4F8CFF;
+}
+
+/* Tooltip */
+.modern-mood-card > div[style*='position: absolute'][style*='background: #4F8CFF'] {
+  z-index: 20;
+  opacity: 0.95;
   pointer-events: none;
-  transform: translateY(8px) scale(0.98);
-  transition: opacity 0.2s, filter 0.2s, transform 0.2s;
+  font-size: 15px;
+  font-weight: 500;
+  border-radius: 12px;
+  padding: 6px 18px;
+  box-shadow: 0 2px 8px 0 #4F8CFF33;
+  background: #4F8CFF;
+  color: #fff;
 }
 
+/* Spinner (SVG) is styled inline in the component */
+
+/* Responsive adjustments */
 @media (max-width: 600px) {
-  .compact-mood-card .sunk-section,
-  .compact-mood-card > div[style*='display: flex'] {
-    flex-direction: column !important;
-    align-items: stretch !important;
+  .modern-mood-card {
+    padding: 16px;
+    max-width: 98vw;
+  }
+  .emoji-section > div {
+    gap: 10px !important;
+  }
+  .image-section {
+    flex-direction: column;
     gap: 8px !important;
   }
 } 
