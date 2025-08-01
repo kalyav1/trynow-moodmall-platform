@@ -102,6 +102,9 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
   const [detectedEmotion, setDetectedEmotion] = useState<string | null>(null);
   const [showMoreMoods, setShowMoreMoods] = useState(false);
   const [showTooltip, setShowTooltip] = useState<string | null>(null);
+  const [products, setProducts] = useState<any[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+  const [productError, setProductError] = useState<string | null>(null);
 
   // Load face-api.js models on mount
   useEffect(() => {
@@ -257,6 +260,59 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
   const emojiSectionDisabled = !!imagePreview;
   const imageSectionDisabled = !!selectedMood;
 
+  // Map moods to product search keywords
+  const MOOD_TO_KEYWORD: Record<string, string> = {
+    Happy: 'fun',
+    Sad: 'comfort',
+    Angry: 'stress',
+    Loving: 'love',
+    Surprised: 'surprise',
+    Cool: 'cool',
+    Thinking: 'book',
+    Celebrating: 'party',
+    Sleepy: 'sleep',
+    Blessed: 'wellness',
+    Determined: 'fitness',
+    Awkward: 'gadget',
+    Hungry: 'food',
+    Neutral: 'basic',
+    Playful: 'toy',
+    Affectionate: 'gift',
+    Disappointed: 'improve',
+    Excited: 'new',
+  };
+
+  // Fetch products when mood changes
+  useEffect(() => {
+    let active = true;
+    async function fetchProductsForMood(mood: string | null) {
+      setProducts([]);
+      setProductError(null);
+      if (!mood) return;
+      setLoadingProducts(true);
+      try {
+        const keyword = MOOD_TO_KEYWORD[mood] || mood;
+        const res = await fetch(`https://dummyjson.com/products/search?q=${encodeURIComponent(keyword)}`);
+        if (!res.ok) throw new Error('Failed to fetch products');
+        const data = await res.json();
+        let prods = data.products || [];
+        // Sort: recommended (by rating, then price ascending)
+        prods = prods.sort((a: any, b: any) => {
+          if (b.rating !== a.rating) return b.rating - a.rating;
+          return a.price - b.price;
+        });
+        if (active) setProducts(prods);
+      } catch (err: any) {
+        if (active) setProductError('Could not load products.');
+      } finally {
+        if (active) setLoadingProducts(false);
+      }
+    }
+    // Only fetch if mood is from emoji or detected
+    if (moodToShow) fetchProductsForMood(moodToShow);
+    return () => { active = false; };
+  }, [moodToShow]);
+
   function capitalize(str: string) {
     return str.charAt(0).toUpperCase() + str.slice(1);
   }
@@ -273,6 +329,9 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
         margin: '40px auto',
         fontFamily: FONT.family,
         position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
       }}
     >
       {/* Spinner overlay when processing */}
@@ -568,6 +627,48 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
           <span style={{ color: '#6B7280', fontWeight: 400 }}>{funnyMessage}</span>
         </div>
       )}
+      {/* Product Recommendations */}
+      <div style={{ marginTop: 18 }}>
+        <h3 style={{ fontSize: 18, fontWeight: 600, color: COLORS.textPrimary, marginBottom: 8, textAlign: 'center' }}>
+          {moodToShow ? `Recommended for your mood: ${moodToShow}` : 'Personalized Recommendations'}
+        </h3>
+        {loadingProducts && (
+          <div style={{ textAlign: 'center', color: COLORS.accent, fontWeight: 500, margin: '16px 0' }}>Loading products...</div>
+        )}
+        {productError && (
+          <div style={{ textAlign: 'center', color: 'red', fontWeight: 500, margin: '16px 0' }}>{productError}</div>
+        )}
+        {!loadingProducts && !productError && products.length === 0 && moodToShow && (
+          <div style={{ textAlign: 'center', color: COLORS.textSecondary, fontWeight: 500, margin: '16px 0' }}>No products found for this mood.</div>
+        )}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: '1fr 1fr',
+          gap: 14,
+          marginTop: 8,
+        }}>
+          {products.map(product => (
+            <div key={product.id} style={{
+              background: '#fff',
+              borderRadius: 12,
+              boxShadow: '0 2px 8px 0 #4F8CFF11',
+              padding: 10,
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              minHeight: 180,
+              position: 'relative',
+              border: '1px solid #e0e7ef',
+              transition: 'box-shadow 0.15s',
+            }}>
+              <img src={product.thumbnail} alt={product.title} style={{ width: 70, height: 70, objectFit: 'cover', borderRadius: 8, marginBottom: 8, boxShadow: '0 1px 4px #4F8CFF22' }} />
+              <div style={{ fontWeight: 600, fontSize: 14, color: COLORS.textPrimary, textAlign: 'center', marginBottom: 4, minHeight: 36 }}>{product.title}</div>
+              <div style={{ fontWeight: 500, fontSize: 15, color: COLORS.accent, marginBottom: 2 }}>${product.price}</div>
+              <div style={{ fontSize: 12, color: COLORS.textSecondary, textAlign: 'center' }}>{product.brand}</div>
+            </div>
+          ))}
+        </div>
+      </div>
       {/* CTA Button */}
       <button
         type="button"
