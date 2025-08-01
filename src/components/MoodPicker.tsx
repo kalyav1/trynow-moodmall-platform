@@ -105,6 +105,7 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
   const [products, setProducts] = useState<any[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [productError, setProductError] = useState<string | null>(null);
+  const [pendingPhotoMood, setPendingPhotoMood] = useState<string | null>(null); // for controlling product fetch
 
   // Load face-api.js models on mount
   useEffect(() => {
@@ -135,6 +136,7 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
     setFileName(null);
     setError(null);
     setDetectedEmotion(null);
+    setPendingPhotoMood(null); // Clear pending photo mood
     if (fileInputRef.current) fileInputRef.current.value = '';
     if (onMoodSelect) onMoodSelect(selectedMood === emoji ? '' : emoji);
   };
@@ -148,6 +150,7 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
     setDetectedEmotion(null);
     setError(null);
     setImagePreview(null); // <-- Clear preview before processing
+    setPendingPhotoMood(null); // clear pending mood
     if (!ALLOWED_TYPES.includes(file.type)) {
       setError('Only JPEG and PNG images are allowed.');
       setImagePreview(null);
@@ -193,6 +196,7 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
           setImagePreview(null);
           setFileName(null);
           setDetectedEmotion(null);
+          setPendingPhotoMood(null);
           if (fileInputRef.current) fileInputRef.current.value = '';
         } else {
           setImagePreview(reader.result as string); // <-- Only set after detection
@@ -200,7 +204,9 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
           const expressions = detection.expressions;
           const sorted = Object.entries(expressions).sort((a, b) => b[1] - a[1]);
           const [dominant, prob] = sorted[0];
-          setDetectedEmotion(`${capitalize(dominant)} (${(prob * 100).toFixed(0)}%)`);
+          const mood = capitalize(dominant);
+          setDetectedEmotion(`${mood} (${(prob * 100).toFixed(0)}%)`);
+          setPendingPhotoMood(mood); // only set if valid
           if (onMoodSelect) onMoodSelect(file);
         }
       } catch (err) {
@@ -208,6 +214,7 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
         setImagePreview(null);
         setFileName(null);
         setDetectedEmotion(null);
+        setPendingPhotoMood(null);
         if (fileInputRef.current) fileInputRef.current.value = '';
       } finally {
         setProcessing(false);
@@ -217,6 +224,7 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
       setError('Failed to read image file.');
       setImagePreview(null);
       setDetectedEmotion(null);
+      setPendingPhotoMood(null);
       setProcessing(false);
     };
     reader.readAsDataURL(file);
@@ -228,6 +236,7 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
     setError(null);
     setFileName(null);
     setDetectedEmotion(null);
+    setPendingPhotoMood(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
@@ -282,7 +291,7 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
     Excited: 'new',
   };
 
-  // Fetch products when mood changes
+  // Fetch products when mood changes (emoji or valid photo mood)
   useEffect(() => {
     let active = true;
     async function fetchProductsForMood(mood: string | null) {
@@ -308,10 +317,11 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
         if (active) setLoadingProducts(false);
       }
     }
-    // Only fetch if mood is from emoji or detected
-    if (moodToShow) fetchProductsForMood(moodToShow);
+    // Only fetch if mood is from emoji or detected from valid photo
+    if (moodSource === 'emoji' && moodToShow) fetchProductsForMood(moodToShow);
+    if (moodSource === 'image' && pendingPhotoMood) fetchProductsForMood(pendingPhotoMood);
     return () => { active = false; };
-  }, [moodToShow]);
+  }, [moodToShow, moodSource, pendingPhotoMood]);
 
   function capitalize(str: string) {
     return str.charAt(0).toUpperCase() + str.slice(1);
