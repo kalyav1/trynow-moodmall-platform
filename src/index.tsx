@@ -5,9 +5,6 @@ import './index.css';
 
 const App = () => (
   <>
-    <div className="header-bar">
-      TryNow MoodMall Platform
-    </div>
     <MoodPicker />
   </>
 );

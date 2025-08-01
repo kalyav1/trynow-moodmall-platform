@@ -1,34 +1,56 @@
 /* --- MoodPicker Modern Redesign --- */
 
-body {
-  background: #F7FAFC;
+body, html {
+  min-height: 100vh;
+  height: auto;
+  background: linear-gradient(135deg, #4F8CFF 0%, #38b2ac 100%);
   font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   color: #23272F;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: scroll;
+  font-size: 14px;
 }
 
 .modern-mood-card {
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 4px 24px 0 #B6C6E633;
-  padding: 32px;
-  max-width: 420px;
-  margin: 40px auto;
+  background: rgba(255,255,255,0.97);
+  border-radius: 14px;
+  box-shadow: 0 4px 16px 0 #4F8CFF22, 0 1px 4px 0 #38b2ac11;
+  border: 1px solid #e0e7ef;
+  padding: 12px 8px 10px 8px;
+  max-width: 320px;
+  width: 100%;
+  margin: 18px auto;
   position: relative;
+  transition: box-shadow 0.18s, border 0.18s;
+  box-sizing: border-box;
 }
 
-.emoji-section,
-.image-section {
-  transition: opacity 0.2s, filter 0.2s;
+h2 {
+  font-size: 1.05rem;
+  margin-bottom: 2px;
+  margin-top: 0;
+}
+
+.modern-mood-card > div[style*='font-size: 18px'] {
+  font-size: 0.95rem !important;
+  margin-bottom: 8px !important;
+}
+
+.emoji-section > div {
+  gap: 5px !important;
+  margin-bottom: 2px !important;
 }
 
 .modern-emoji-btn {
-  font-size: 28px;
-  width: 48px;
-  height: 48px;
+  font-size: 16px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 2px solid #E0E7EF;
   background: #fff;
-  box-shadow: 0 2px 8px 0 #232f3e11;
+  box-shadow: 0 1px 4px 0 #232f3e08;
   outline: none;
   cursor: pointer;
   transition: all 0.15s cubic-bezier(.4,0,.2,1);
@@ -41,125 +63,57 @@ body {
 }
 
 .modern-emoji-btn.selected {
-  border: 3px solid #4F8CFF;
+  border: 2px solid #4F8CFF;
   background: #F7FAFC;
-  box-shadow: 0 0 0 4px #4F8CFF33;
-  transform: scale(1.15);
+  box-shadow: 0 0 0 2px #4F8CFF22;
+  transform: scale(1.08);
   z-index: 1;
 }
 
 .modern-emoji-btn:not(.selected):hover {
-  transform: scale(1.1);
-  box-shadow: 0 0 0 6px #4F8CFF22;
+  transform: scale(1.04);
+  box-shadow: 0 0 0 3px #4F8CFF18;
 }
 
 .more-moods-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin: 0 auto 8px auto;
-  background: #F7FAFC;
-  color: #4F8CFF;
-  border: none;
-  border-radius: 16px;
-  padding: 6px 16px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 1px 4px 0 #4F8CFF11;
-  transition: background 0.12s, box-shadow 0.12s;
-}
-.more-moods-btn:hover {
-  background: #E5E7EB;
-  box-shadow: 0 2px 8px 0 #4F8CFF22;
+  font-size: 0.9rem;
+  padding: 2px 7px;
+  border-radius: 10px;
+  margin-bottom: 2px;
 }
 
 .modern-file-label {
-  background: #4F8CFF;
-  color: #fff;
-  border-radius: 16px;
-  padding: 10px 22px;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  box-shadow: 0 2px 8px 0 #4F8CFF22;
-  border: none;
-  outline: none;
-  position: relative;
-  transition: background 0.12s, box-shadow 0.12s;
-  display: inline-block;
-}
-.modern-file-label:hover {
-  background: #6eaaff;
-  box-shadow: 0 4px 16px 0 #4F8CFF33;
-}
-.modern-file-label:active {
-  background: #2563eb;
-}
-.modern-file-label[disabled],
-.image-section[style*='pointer-events: none'] .modern-file-label {
-  background: #E5E7EB !important;
-  color: #6B7280 !important;
-  cursor: not-allowed !important;
-  opacity: 0.7;
+  padding: 5px 10px;
+  font-size: 0.9rem;
+  border-radius: 10px;
 }
 
 .image-section img {
-  width: 48px;
-  height: 48px;
-  object-fit: cover;
-  border-radius: 12px;
-  border: 2px solid #4F8CFF;
-  box-shadow: 0 2px 8px 0 #4F8CFF22;
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid #4F8CFF;
 }
 
 .image-section button[aria-label='Remove image'] {
-  background: #4F8CFF;
-  color: #fff;
-  border: none;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
-  width: 28px;
-  height: 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  box-shadow: 0 1px 4px 0 #4F8CFF22;
-  margin-left: 2px;
-  transition: background 0.12s;
-}
-.image-section button[aria-label='Remove image']:hover {
-  background: #2563eb;
+  font-size: 0.9rem;
 }
 
 .modern-cta-btn {
-  width: 100%;
-  margin-top: 24px;
-  background: #4F8CFF;
-  color: #fff;
-  border: none;
-  border-radius: 16px;
-  font-size: 18px;
-  font-weight: 600;
-  padding: 14px 0;
-  box-shadow: 0 2px 8px 0 #4F8CFF22;
-  cursor: pointer;
-  opacity: 1;
-  transition: background 0.12s, box-shadow 0.12s;
+  font-size: 0.95rem;
+  border-radius: 10px;
+  padding: 7px 0;
+  margin-top: 8px;
 }
-.modern-cta-btn:disabled {
-  background: #E5E7EB;
-  color: #6B7280;
-  cursor: not-allowed;
-  opacity: 0.7;
-  box-shadow: none;
-}
-.modern-cta-btn:hover:not(:disabled) {
-  background: #6eaaff;
-  box-shadow: 0 4px 16px 0 #4F8CFF33;
-}
-.modern-cta-btn:active:not(:disabled) {
-  background: #2563eb;
+
+.modern-mood-card > div[style*='margin: 18px 0 0 0'] {
+  margin: 6px 0 0 0 !important;
+  padding: 5px 7px !important;
+  font-size: 0.93rem !important;
+  border-radius: 6px !important;
 }
 
 /* Skip for now link */
@@ -196,15 +150,17 @@ body {
 
 /* Responsive adjustments */
 @media (max-width: 600px) {
+  body, html {
+    padding: 0 1px;
+    min-height: 100vh;
+    font-size: 13px;
+  }
   .modern-mood-card {
-    padding: 16px;
-    max-width: 98vw;
+    padding: 3px;
+    max-width: 99vw;
+    margin: 4px auto;
   }
   .emoji-section > div {
-    gap: 10px !important;
-  }
-  .image-section {
-    flex-direction: column;
-    gap: 8px !important;
+    gap: 3px !important;
   }
 } 
