@@ -1,151 +1,186 @@
 # eMotional Commerce Platform
 
-## Overview
-A modern, accessible, and secure mood-based product recommendation engine for e-commerce, featuring internationalization, accessibility, and robust security best practices.
+A modern mood‑based product discovery experience. Frontend (Vite/React) is deployed as an Azure Static Web App; backend (FastAPI) is deployed to Azure App Service (Python).
 
 ---
 
-## Table of Contents
-- [Features](#features)
-- [Technology Stack](#technology-stack)
-- [Setup & Installation](#setup--installation)
-- [Running the Application](#running-the-application)
-- [Integration Guide](#integration-guide)
-- [Compliance](#compliance)
-  - [PII, PCI, GDPR](#pii-pci-gdpr)
-  - [OWASP Top 10](#owasp-top-10)
-  - [WCAG Accessibility](#wcag-accessibility)
-- [Security Best Practices](#security-best-practices)
-- [Contributing](#contributing)
-- [License](#license)
+## Quick Links
+- Frontend (SWA): `https://<your-swa>.azurestaticapps.net`
+- Backend (App Service): `https://<your-app-service>.azurewebsites.net`
+- API docs: `https://<your-app-service>.azurewebsites.net/docs`
 
 ---
 
-## Features
-- **Mood/Image-based Product Recommendations**: Users can select a mood or upload a photo to receive personalized product suggestions.
-- **Internationalization (i18n)**: UI supports English, French, and Spanish with easy extensibility.
-- **Accessibility (WCAG Compliant)**: Keyboard navigation, ARIA attributes, color contrast, and skip links.
-- **Security**: Secure HTTP headers, rate limiting, and CSP implemented.
-- **Component-based Integration**: Easily embeddable as a widget or React component in any e-commerce site.
-- **Modern UI/UX**: Responsive, sleek, and user-friendly design.
-
----
-
-## Technology Stack
-- **Frontend**: React, Vite, TypeScript, react-i18next, TailwindCSS (optional), CSS-in-JS
-- **Backend**: FastAPI (Python), CORS, Security Middleware
-- **Other**: Docker (optional), Node.js, npm
-
----
-
-## Setup & Installation
-
-### Prerequisites
-- Node.js (v16+ recommended)
-- Python 3.8+
-- npm
-
-### 1. Clone the Repository
-```sh
-git clone <repo-url>
-cd trynow-moodmall-platform
+## Project Structure
+```
+trynow-moodmall-platform/
+  api.py                         # FastAPI app (app = FastAPI())
+  requirements.txt               # Backend dependencies
+  public/                        # Optional static assets
+  vite-moodmall/                 # Frontend (Vite/React/TypeScript)
+    src/
+    index.html
+    staticwebapp.config.json     # SWA routing/fallback (added in repo)
+    .env.production              # VITE_API_BASE_URL for prod (you create)
+  .github/workflows/
+    azure-static-web-apps-*.yml  # Frontend deploy workflow
+    deploy-backend-appservice.yml# Backend deploy workflow
 ```
 
-### 2. Install Frontend Dependencies
-```sh
-cd vite-moodmall
-npm install
-```
+---
 
-### 3. Install Backend Dependencies
-```sh
-cd ..
+## Prerequisites
+- Node.js 20+ for frontend build (local and CI)
+- Python 3.9+ for backend (App Service runtime)
+- Azure subscriptions for:
+  - Azure Static Web Apps (frontend)
+  - Azure App Service (Linux, Python) (backend)
+- GitHub repository (for CI/CD)
+
+---
+
+## 1) Backend (FastAPI) – Local Run
+```bash
+# from repo root
 pip install -r requirements.txt
+uvicorn api:app --reload  # http://localhost:8000
 ```
+
+### Required environment variables
+- `OPENAI_API_KEY`: backend image generation. Configure in Azure App Service (do not commit locally).
+
+### CORS
+`api.py` already allows the SWA origin. If your SWA URL changes, update `allow_origins` to include it and redeploy.
 
 ---
 
-## Running the Application
-
-### 1. Start the Backend (FastAPI)
-```sh
-python api.py
-```
-- The backend will run on `http://localhost:8000` by default.
-
-### 2. Start the Frontend (Vite/React)
-```sh
+## 2) Frontend (Vite/React) – Local Run
+```bash
 cd vite-moodmall
-npm run dev
+npm ci
+npm run dev  # http://localhost:5173
 ```
-- The frontend will run on `http://localhost:5173` by default.
+
+### Frontend → Backend API base URL
+Create `vite-moodmall/.env.production` (not committed by us so you manage credentials/URLs):
+```
+VITE_API_BASE_URL=https://<your-app-service>.azurewebsites.net
+```
+The code calls:
+```
+fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/generate-virtual-room-image`, ...)
+```
+
+### SPA routing
+`vite-moodmall/staticwebapp.config.json` ensures client‑side routing fallback to `/index.html` and excludes assets.
 
 ---
 
-## Integration Guide
+## 3) Deploy Frontend to Azure Static Web Apps (GitHub Actions)
+We build from `vite-moodmall` and deploy `dist` via the workflow in `.github/workflows/azure-static-web-apps-*.yml`.
 
-### As a Widget (Iframe)
-1. Deploy the frontend app to a public URL.
-2. Embed in your e-commerce site:
-   ```html
-   <iframe src="https://your-moodmall-app.com" width="420" height="600" style="border:none"></iframe>
-   ```
+### Configure SWA deployment token
+- Azure Portal → your Static Web App → Settings → Deployment token → copy.
+- GitHub → Repo → Settings → Secrets and variables → Actions → New repository secret
+  - Name: the name referenced in your SWA workflow (e.g., `AZURE_STATIC_WEB_APPS_API_TOKEN_<...>`)
+  - Value: paste the token
 
-### As a React Component
-1. Import the `MoodPicker` component from your build or as a package.
-2. Use in your React app:
-   ```jsx
-   import MoodPicker from 'your-moodmall-package';
-   <MoodPicker onProductSelect={handleProductSelect} />
-   ```
+### Workflow essentials (already committed)
+- Uses Node 20.x
+- Working directory = `vite-moodmall`
+- `npm ci && npm run build`
+- `app_location: vite-moodmall`, `output_location: dist`
 
-### API Integration
-- The backend exposes REST endpoints for recommendations and mood analysis.
-- See `API_DOCUMENTATION.md` for details (to be completed).
+### Build with correct backend URL
+Option A (recommended): commit `vite-moodmall/.env.production` with `VITE_API_BASE_URL` set to your App Service URL.
 
----
+Option B (CI inject): in the SWA workflow build step add:
+```yaml
+env:
+  VITE_API_BASE_URL: https://<your-app-service>.azurewebsites.net
+```
 
-## Compliance
-
-### PII, PCI, GDPR
-- **No sensitive data is stored by default.**
-- If user data is collected, ensure:
-  - Explicit user consent is obtained.
-  - Data is encrypted in transit (HTTPS) and at rest.
-  - Data retention and deletion policies are documented.
-  - Users can request data export or deletion.
-  - No payment data (PCI) is handled by this codebase.
-
-### OWASP Top 10
-- Security headers (CSP, HSTS, X-Frame-Options, etc.) are set in the backend.
-- Basic rate limiting is implemented.
-- No direct user authentication is present; add JWT/OAuth for protected endpoints.
-- All dependencies should be regularly updated and scanned for vulnerabilities.
-
-### WCAG Accessibility
-- Skip-to-content link, ARIA attributes, keyboard navigation, and color contrast are implemented.
-- All images have alt text.
-- Focus indicators are visible.
-- UI is tested for screen reader compatibility.
+Push to the configured branch to deploy. Verify the site loads at your SWA URL.
 
 ---
 
-## Security Best Practices
-- Use HTTPS in production.
-- Set environment variables for secrets (do not hardcode).
-- Restrict CORS to trusted domains in production.
-- Regularly audit dependencies (`npm audit`, `pip-audit`).
-- Monitor logs for suspicious activity.
-- Add authentication/authorization for sensitive endpoints if needed.
+## 4) Deploy Backend to Azure App Service (GitHub Actions)
+Workflow: `.github/workflows/deploy-backend-appservice.yml` (already committed).
+
+### App Service configuration (Portal → App Service → Configuration)
+- Application settings:
+  - `WEBSITES_PORT = 8000`
+  - `SCM_DO_BUILD_DURING_DEPLOYMENT = 1`
+  - `OPENAI_API_KEY = <your key>`
+- General settings → Startup Command:
+```
+gunicorn -k uvicorn.workers.UvicornWorker -w 2 -b 0.0.0.0:8000 api:app
+```
+Save and accept the restart prompt.
+
+### Publish profile secret
+- Azure Portal → App Service → Overview → Get publish profile → Download
+- GitHub → Repo → Settings → Secrets and variables → Actions → New repository secret
+  - Name: `AZURE_WEBAPP_PUBLISH_PROFILE`
+  - Value: paste the FULL XML content
+
+### Workflow key fields
+```yaml
+- uses: azure/webapps-deploy@v2
+  with:
+    app-name: <YOUR_APP_SERVICE_NAME>
+    publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+    package: backend-package.zip
+```
+Push to `master` (or your configured branch) to deploy.
+
+### Verify
+- Browse: `https://<your-app-service>.azurewebsites.net/docs`
+- Log stream: Portal → App Service → Monitoring → Log stream
+- Kudu logs: Advanced Tools → Go → `/home/LogFiles`
 
 ---
 
-## Contributing
-- Fork the repo and create a feature branch.
-- Submit pull requests with clear descriptions.
-- Follow code style and accessibility guidelines.
+## 5) End‑to‑End Wiring (Cross‑subscription)
+Subscriptions don’t matter for public services:
+- Frontend (SWA) calls backend via public URL set in `VITE_API_BASE_URL`.
+- Backend CORS includes your SWA origin.
 
 ---
 
-## License
-[MIT](LICENSE)
+## 6) Troubleshooting
+- Frontend still calls localhost:
+  - Ensure `.env.production` exists or CI env var set.
+  - Rebuild and redeploy SWA; hard refresh (Ctrl+F5).
+- 500/400 from backend:
+  - Check Log stream. For OpenAI: `billing_hard_limit_reached` = top‑up or change key.
+- "Publish profile invalid":
+  - Re‑download, paste full XML, ensure `app-name` matches exactly.
+- CORS error:
+  - Add SWA URL to `allow_origins` in `api.py` and redeploy.
+
+---
+
+## 7) Local Development Recap
+```bash
+# backend
+pip install -r requirements.txt
+uvicorn api:app --reload  # http://localhost:8000
+
+# frontend
+cd vite-moodmall
+npm ci
+npm run dev  # http://localhost:5173
+```
+
+---
+
+## 8) Security & Compliance Notes
+- Do not commit secrets; use App Service App Settings and GitHub Secrets.
+- HTTPS only in production; security headers and basic rate limiting included.
+- UI follows accessibility best practices.
+
+---
+
+## 9) License
+MIT
