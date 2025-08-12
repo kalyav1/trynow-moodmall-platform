@@ -1,0 +1,62 @@
+# --- Node / React / Vite ---
+node_modules/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Vite outputs
+vite-moodmall/dist/
+dist/
+.temp/
+.cache/
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+.eggs/
+.venv/
+venv/
+.env
+.env.*
+
+# Build artifacts / packages
+build/
+dist-*/
+*.whl
+*.egg
+
+# --- Testing / Coverage ---
+.coverage*
+coverage/
+.pytest_cache/
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+.cursor/
+*.swp
+*.swo
+
+# --- OS files ---
+.DS_Store
+Thumbs.db
+
+# --- Logs & temp ---
+log/
+logs/
+*.gz
+*.zip
+*.tar
+*.tar.gz
+
+# --- Misc ---
+# lockfiles are usually tracked; comment out if you prefer to ignore
+# package-lock.json
+# yarn.lock
+# pnpm-lock.yaml 

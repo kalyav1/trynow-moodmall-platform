@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "lib": ["dom", "es2016", "esnext"],
+    "jsx": "react-jsx",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "types": ["@react-three/fiber", "react"]
+  },
+  "include": ["components", "src", "molecules", "ui", "trynow-web", "*.ts", "*.tsx"],
+  "exclude": ["node_modules", "build", "dist"]
+}

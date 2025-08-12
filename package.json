@@ -1,0 +1,57 @@
+{
+  "name": "trynow-moodmall-platform",
+  "version": "1.0.0",
+  "private": true,
+  "description": "TryNow MoodMall Platform - React, TypeScript, Testing setup",
+  "main": "index.js",
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@react-three/drei": "^9.56.14",
+    "@react-three/fiber": "^8.13.7",
+    "@tensorflow/tfjs": "^3.21.0",
+    "cross-spawn": "^7.0.6",
+    "face-api.js": "^0.22.2",
+    "i18next": "^25.3.2",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "react-i18next": "^15.6.1",
+    "react-icons": "^4.10.1",
+    "react-scripts": "^5.0.1",
+    "three": "^0.179.0"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.4",
+    "@testing-library/react": "^16.3.0",
+    "@types/jest": "^30.0.0",
+    "@types/react": "^19.1.9",
+    "@types/react-dom": "^19.1.7",
+    "@types/testing-library__jest-dom": "^5.14.9",
+    "@vitejs/plugin-react": "^4.7.0",
+    "jest": "^30.0.5",
+    "jest-environment-jsdom": "^29.7.0",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.9.2",
+    "vite": "^7.0.6"
+  },
+  "proxy": "http://localhost:8000",
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
+}
