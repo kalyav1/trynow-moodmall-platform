@@ -492,7 +492,7 @@ const MoodPicker: React.FC<MoodPickerProps> = ({ onMoodSelect }) => {
       const selectedTitles = products
         .filter((p: any) => selectedProductIds.includes(p.id))
         .map((p: any) => p.title || p.name || '');
-      const res = await fetch('http://localhost:8000/generate-virtual-room-image', {
+      const res = await fetch(`${import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'}/generate-virtual-room-image`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ products: selectedTitles }),
