@@ -60,7 +60,34 @@ async def rate_limiter(request: Request, call_next):
     rate_limit_cache[key] = count + 1
     return await call_next(request)
 
+# Request/Response logging middleware
+@app.middleware("http")
+async def log_requests(request: Request, call_next):
+    start = time.time()
+    try:
+        cl = request.headers.get("content-length", "-")
+        logger.info(
+            f"REQ method={request.method} path={request.url.path} ip={request.client.host} cl={cl} ua={request.headers.get('user-agent','-')}"
+        )
+    except Exception:
+        pass
+    response: Response = await call_next(request)
+    try:
+        dur_ms = (time.time() - start) * 1000.0
+        logger.info(
+            f"RES method={request.method} path={request.url.path} status={getattr(response, 'status_code', '-')} dur_ms={dur_ms:.1f}"
+        )
+    except Exception:
+        pass
+    return response
+
 logger = logging.getLogger("moodmall")
+# Console handler (so logs appear in Azure Log Stream)
+if not any(isinstance(h, logging.StreamHandler) for h in logger.handlers):
+    ch = logging.StreamHandler()
+    ch.setLevel(logging.INFO)
+    ch.setFormatter(logging.Formatter('%(asctime)s %(levelname)s %(message)s'))
+    logger.addHandler(ch)
 
 # Set up file logging
 log_dir = 'log'
@@ -177,7 +204,9 @@ client = openai.OpenAI(
 
 @app.post("/generate-virtual-room-image")
 async def generate_virtual_room_image(selection: ProductSelection):
+    logger.info(f"/generate-virtual-room-image products={selection.products}")
     prompt = build_prompt(selection.products)
+    logger.info(f"prompt={prompt[:300]}")
     try:
         response = client.images.generate(
             model="dall-e-2",
@@ -186,7 +215,8 @@ async def generate_virtual_room_image(selection: ProductSelection):
             size="512x512"
         )
         image_url = response.data[0].url
+        logger.info(f"image_url={image_url}")
         return {"image_url": image_url, "prompt": prompt}
     except Exception as e:
-        logger.error(f"Error in DALL·E endpoint: {e}\n{traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail="Connection error.")
+        logger.error(f"Error in DALL·E endpoint: {type(e).__name__}: {e}\n{traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail="Internal server error. See server logs for details.")
