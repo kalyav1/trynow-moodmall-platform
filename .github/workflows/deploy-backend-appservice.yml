@@ -1,0 +1,36 @@
+name: Deploy FastAPI to Azure App Service
+
+on:
+  push:
+    branches: [ master ]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Create deployment package (exclude node/build dirs)
+        run: |
+          zip -r backend-package.zip . \
+            -x "*.git*" \
+               "node_modules/*" \
+               "vite-moodmall/node_modules/*" \
+               "vite-moodmall/dist/*" \
+               "**/__pycache__/*" \
+               "log/*" \
+               "*.zip"
+
+      - name: Deploy to Azure Web App
+        uses: azure/webapps-deploy@v2
+        with:
+          app-name: <YOUR_APP_SERVICE_NAME>
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: backend-package.zip 
